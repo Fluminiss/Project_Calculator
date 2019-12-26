@@ -33,6 +33,7 @@
                 border-color: black;
                 padding: 20px 0px;
                 width: 320px;
+                height: 68px;
             }
         </style>
     </head>
@@ -40,33 +41,39 @@
         <div id="container">
             <div id = "calccontainer">
                 <div id="display">
-                    09324
+                    Type something!
+                </div>
+                <div class="row" id= "rowzero">
+                    <button class="editbtn" id="clear">C</button>
+                    <button class="editbtn" id="back">CE</button>
+                    <button class="editbtn">Extra</button>
+                    <button id="subtract" class="operatorbtn">WIP</button>
                 </div>
                 <div class="row" id ="rowone">
                     <button class="numberbtn">7</button>
                     <button class="numberbtn">8</button>
                     <button class="numberbtn">9</button>
-                    <button id="subtract" class="operatorbtn">/</button>
+                    <button id="subtract" class="operatorbtn disp">/</button>
                 </div>
                 <div class="row" id="rowtwo">
                     
                     <button class="numberbtn">4</button>
                     <button class="numberbtn">5</button>
                     <button class="numberbtn">6</button>
-                    <button id="multiply" class="operatorbtn">*</button>
+                    <button id="multiply" class="operatorbtn disp">*</button>
                 </div>
                 <div class="row" id="rowthree">
                     
                     <button class="numberbtn">1</button>
                     <button class="numberbtn">2</button>
                     <button class="numberbtn">3</button>
-                    <button class="operatorbtn">-</button>
+                    <button class="operatorbtn disp">-</button>
                 </div>
                 <div class="row" id="rowfour">
                     <button class="numberbtn">0</button>
-                    <button class="operatorbtn">.</button>
+                    <button class="operatorbtn" id="period">.</button>
                     <button id="execute" class="operatorbtn">=</button>
-                    <button id="add" class="operatorbtn">+</button>
+                    <button id="add" class="operatorbtn disp">+</button>
                 </div>
                 
                 
@@ -77,7 +84,7 @@
 
 <script>
     function add(a,b){
-        return a+b;
+        return parseInt(a)+parseInt(b);
     }
     function subtract(a,b) {
         return a-b;
@@ -91,26 +98,105 @@
     function operate(operator,a,b) {
         return operator(a,b);
     }
+    function evaluate() {
+        console.log(textOfDisplay);
+        let formula = textOfDisplay;
+        let operators = /[-\+\*\/]/g;
+        let numArray = formula.split(operators);
+        let operatorSeqArray = formula.match(operators);
+        let answer = numArray
+        let result
+        if (!operatorSeqArray) {
+            return (displayText(numArray));
+        }  
 
-    function numStore(number) 
-    let currentExecution = ""
-    let displayText = "" 
-    let display = document.getElementById("display");
-    let button = document.querySelectorAll("button")
-    button.forEach( (btn) => {btn.addEventListener('click', function(e) {
-        displayText += e.target.outerText;
-        display.textContent = displayText;
-    })})
-    let execute = document.getElementById("execute");
-    exetute.addEventListener('click', () => {
-        if (displayText.includes("+")) {
+        for (let i=0; i<operatorSeqArray.length; i++) {
+            console.log(numArray)
+			console.log(operatorSeqArray)
+            if (operatorSeqArray[i]==="*") {
+                result = operate(multiply, numArray[i], numArray[i+1]);
+                numArray.splice(i,2,Math.round(result*100)/100);
+                operatorSeqArray.splice(i,1);
+                i = -1;
+            } else if (operatorSeqArray[i]==="/") {
+                if (numArray[i+1] === "0") {displayText("Implosion of the universe..."); return}
+                result = operate(divide, numArray[i], numArray[i+1]);
+                numArray.splice(i,2,Math.round(result*100)/100);
+                operatorSeqArray.splice(i,1);
+                console.log(result)
+                i = -1; }
+				}
+        for (let i=0; i<operatorSeqArray.length; i++) {    
+				if (operatorSeqArray[i]==="+") {
+                result = operate(add, numArray[i], numArray[i+1]);
+                numArray.splice(i,2,Math.round(result*100)/100);
+                operatorSeqArray.splice(i,1);
+                i = -1;
+            } 	else if (operatorSeqArray[i]==="-") {
+                result = operate(subtract, numArray[i], numArray[i+1]);
+                numArray.splice(i,2,Math.round(result*100)/100);
+                operatorSeqArray.splice(i,1);
+                i = -1;
+            }}
 
-        } else if (displayText.includes("-"){
+            console.log(operatorSeqArray.length);
+        clearText()
+        displayText(numArray)
+    }
 
-        }
-    });
+    let textOfDisplay = ""
     
+    function numStore(event) {
+        textOfDisplay += event.target.outerText;
+        let operators = /[-\+\*\/]/g;
+        if (event.target.outerText.match(operators)) {
+            allowPeriod(true);
+        }
+        displayText(textOfDisplay)
+    }
+    function clearText() {
+        textOfDisplay = " ";
+        displayText(textOfDisplay);
+        allowPeriod(true);
+    }
 
+    function backspace() {
+        textOfDisplay = textOfDisplay.slice(0, -1);
+        displayText(textOfDisplay);
+    }
 
+    function displayText(text) {
+        let display = document.getElementById("display");
+        display.textContent = text;
+    }
+
+    function pressPeriod(event) {
+        numStore(event);
+        allowPeriod(false);
+
+    }
+
+    function allowPeriod(allow) {
+        if (allow) {
+            period.addEventListener("click", pressPeriod)
+        } else {
+            period.removeEventListener("click", pressPeriod)
+        }
+    }
+
+    let button = document.querySelectorAll(".numberbtn, .disp");
+    button.forEach(btn => {btn.addEventListener('click', numStore)})
+    
+    let execute = document.getElementById("execute")
+    execute.addEventListener('click', evaluate)
+
+    let clear = document.getElementById("clear")
+    clear.addEventListener('click', clearText)
+    
+    let back = document.getElementById("back")
+    back.addEventListener('click', backspace)
+
+    let period = document.getElementById("period")
+    period.addEventListener('click', pressPeriod)
     
 </script>
